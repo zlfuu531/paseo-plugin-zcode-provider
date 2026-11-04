@@ -32,7 +32,7 @@ it("accepts only after ACK even if rows and terminal state arrive first", async 
     ),
   ).toHaveLength(1);
 });
-it("hides the shared Browser and Computer Use tool from every input", async () => {
+it("does not hide the shared node_repl tool from any input", async () => {
   const f = await fixture();
   await f.open();
   await f.prompt();
@@ -44,8 +44,7 @@ it("hides the shared Browser and Computer Use tool from every input", async () =
     .filter((c) => c.params?.envelope?.type === "sendText")
     .map((c) => c.params.envelope.payload);
   expect(payloads).toHaveLength(2);
-  for (const payload of payloads)
-    expect(payload.toolDisallowlist).toEqual(["mcp__node_repl__js"]);
+  for (const payload of payloads) expect(payload.toolDisallowlist).toEqual([]);
 });
 it("aggregates guide input and emits complete row snapshots with stable IDs", async () => {
   const f = await fixture();

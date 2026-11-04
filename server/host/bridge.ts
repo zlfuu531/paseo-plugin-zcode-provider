@@ -28,6 +28,7 @@ import {
 import type { Logger } from "../logger.js";
 import { PROVIDER_VERSION } from "../build-info.js";
 import { UNSUPPORTED_CAPABILITY_ENVIRONMENT } from "../unsupported-capabilities.js";
+import { zcodeCuaBrokerEnv } from "../cua-broker-env.js";
 
 export type SettingsChannel =
   | "oauth"
@@ -144,6 +145,7 @@ export class ZCodeHostBridge implements HostBridge {
       env: {
         ...runtimeEnvironment(environment),
         ...UNSUPPORTED_CAPABILITY_ENVIRONMENT,
+        ...zcodeCuaBrokerEnv(),
         ZCODE_SERVICE_AUTHORITY_MODE: "standalone-server",
         ZCODE_AGENT_SERVER_COMMAND: runtime.paths.executable,
         ZCODE_AGENT_SERVER_ARGS_JSON: JSON.stringify([

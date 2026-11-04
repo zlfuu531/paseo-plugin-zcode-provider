@@ -55,10 +55,10 @@ it("negotiates stdio plus V4 and disables question auto resolution", async () =>
     await bridge.close();
   }
 });
-it("starts the Server without unsupported capabilities, whatever the caller sets", async () => {
+it("keeps Computer Use enabled and suppresses only Visualize, whatever the caller sets", async () => {
   const bridge = ZCodeHostBridge.start(runtime, logger, {
     ...process.env,
-    ZCODE_CUA_PRODUCT_HELPER: "1",
+    ZCODE_CUA_PRODUCT_HELPER: "0",
     PASEO_ZCODE_SUPPRESSED_PLUGINS: "",
   });
   try {
@@ -69,9 +69,8 @@ it("starts the Server without unsupported capabilities, whatever the caller sets
         z.unknown(),
       ),
     ).toEqual({
-      ZCODE_CUA_PRODUCT_HELPER: "0",
-      PASEO_ZCODE_SUPPRESSED_PLUGINS:
-        "computer-use@zcode-plugins-official,browser-use@zcode-plugins-official,visualize@zcode-plugins-official",
+      ZCODE_CUA_PRODUCT_HELPER: "1",
+      PASEO_ZCODE_SUPPRESSED_PLUGINS: "visualize@zcode-plugins-official",
     });
   } finally {
     await bridge.close();

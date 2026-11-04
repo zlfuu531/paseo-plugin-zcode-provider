@@ -1,0 +1,62 @@
+Discover the running ZCode Desktop's Computer Use broker from the managed runtime
+
+Purpose: paseo-plugin-zcode-provider (fork) enables Computer Use for Paseo
+sessions. The standalone Server captures and strips
+ZCODE_CUA_PERMISSION_BROKER_SOCKET before spawning the agent, and under
+ZCODE_SERVICE_AUTHORITY_MODE=standalone-server it does not start its own
+Helper. The agent therefore cannot see the Desktop Helper's named pipe. This
+patch makes captureZCodeCuaBrokerCredentials recover the running Desktop
+Helper's pipe when the env carries no complete credential pair. The Desktop
+broker does not validate the authority nonce; the placeholder only has to match
+the trusted shared node_repl server config.
+
+Target: captureZCodeCuaBrokerCredentials in packages/shared/src/runtimeEnv.ts
+(ZCode 3.16.2, 3c5b227649371507ddc4eb46ac5133afe6db1cab).
+
+Remove when: ZCode provides an official way to attach a standalone Server to the
+Desktop CUA broker, or the provider stops enabling Computer Use.
+
+License: Apache-2.0, the license of the modified ZCode source.
+
+Fork note: ADR 19 limits patches to hiding capabilities. This patch intentionally
+enables a capability in this fork and requires a running ZCode Desktop.
+
+diff --git a/packages/shared/src/runtimeEnv.ts b/packages/shared/src/runtimeEnv.ts
+--- a/packages/shared/src/runtimeEnv.ts
++++ b/packages/shared/src/runtimeEnv.ts
+@@ -145,9 +145,33 @@
+ // 凭据捕获进本进程私有存储，只经 getCapturedZCodeCuaBrokerCredentials() 暴露给 bootstrap 的定向
+ // 注入路径，绝不写回任何子进程 env。
+ function captureZCodeCuaBrokerCredentials(env: Record<string, string | undefined>): void {
+-  const socket = env[ZCODE_CUA_BROKER_SOCKET_ENV_KEY]?.trim();
+-  const pluginAuthority = env[ZCODE_CUA_PLUGIN_AUTHORITY_ENV_KEY]?.trim();
++  let socket = env[ZCODE_CUA_BROKER_SOCKET_ENV_KEY]?.trim();
++  let pluginAuthority = env[ZCODE_CUA_PLUGIN_AUTHORITY_ENV_KEY]?.trim();
+   const refreshMarker = env["ZCODE_CUA_PERMISSION_BROKER_REFRESH_MARKER"]?.trim();
++  // paseo-plugin-zcode-provider (fork): the standalone Server strips broker
++  // credentials before spawning the agent, so recover the running Desktop
++  // helper's named pipe here. The Desktop broker does not validate the
++  // authority nonce; it only has to match the trusted shared node_repl server.
++  if (!(socket && pluginAuthority)) {
++    try {
++      const fs = require("node:fs") as typeof import("node:fs");
++      const helperPipe = fs
++        .readdirSync("\\\\.\\pipe\\")
++        .filter(
++          (name) =>
++            name.toLowerCase().startsWith("zcode-cua-helper-") &&
++            name.toLowerCase() !== "zcode-cua-helper-default",
++        )
++        .sort()
++        .at(-1);
++      if (helperPipe) {
++        socket = `\\\\.\\pipe\\${helperPipe}`;
++        pluginAuthority = pluginAuthority ?? "desktop-broker-interop";
++      }
++    } catch {
++      // Non-Windows hosts and a stopped Desktop have no pipe.
++    }
++  }
+   // 连接没有口令：socket + authority（config-provenance 随机数）同批出现才构成有效凭据组；
+   // 半组说明上游注入不完整或正在轮换。
+   if (socket && pluginAuthority) {
