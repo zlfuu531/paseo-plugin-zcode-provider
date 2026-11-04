@@ -30,23 +30,44 @@ export async function resolveModelSelection(
   bridge: HostBridge,
   view: ModelSelectionView,
   selection: ModelSelection,
+  allowFallback = false,
 ): Promise<ModelSelection> {
-  const model = view.models.find(
+  const requestedModel = view.models.find(
     (item) => encodeModel(item.ref) === encodeModel(selection),
   );
+  // A persisted session can outlive its selected provider or model. Only
+  // session restoration opts into this fallback so explicit model changes
+  // continue to fail when the requested model is unavailable.
+  const preferredModel = view.preferredSelection
+    ? view.models.find(
+        (item) =>
+          encodeModel(item.ref) === encodeModel(view.preferredSelection!),
+      )
+    : undefined;
+  const model =
+    requestedModel ??
+    (allowFallback ? (preferredModel ?? view.models[0]) : undefined);
   if (!model)
     throw new AdapterError("INVALID_CONFIGURATION", "Unknown ZCode model");
+  const selectedModel = {
+    providerId: model.ref.providerId,
+    modelId: model.ref.modelId,
+  };
   // ZCode's projectAppModelOption uses the last advertised level as default.
   // Model IDs and reasoning controls remain separate in Paseo.
+  const requestedReasoningLevel = selection.options?.reasoningLevel;
   const reasoningLevel =
-    selection.options?.reasoningLevel ?? model.reasoningLevels.at(-1)!;
+    requestedReasoningLevel &&
+    (requestedModel || model.reasoningLevels.includes(requestedReasoningLevel))
+      ? requestedReasoningLevel
+      : model.reasoningLevels.at(-1)!;
   if (!model.reasoningLevels.includes(reasoningLevel))
     throw new AdapterError(
       "INVALID_CONFIGURATION",
       "Unknown ZCode thinking option",
     );
   const resolved = await readModelSelection(bridge, {
-    ...selection,
+    ...selectedModel,
     options: { reasoningLevel },
   });
   if (resolved.selectionIssue || !resolved.effectiveSelection)
@@ -54,7 +75,7 @@ export async function resolveModelSelection(
       "INVALID_CONFIGURATION",
       "ZCode model selection is unavailable",
     );
-  if (encodeModel(resolved.effectiveSelection) !== encodeModel(selection))
+  if (encodeModel(resolved.effectiveSelection) !== encodeModel(selectedModel))
     throw new AdapterError(
       "INVALID_CONFIGURATION",
       "ZCode resolved a different model; select it explicitly",

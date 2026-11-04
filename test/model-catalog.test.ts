@@ -32,6 +32,65 @@ it("uses the Host model catalog and V4 model selection", async () => {
   ).toBe(true);
   expect(f.host.calls.some((c) => c.method === "setModel")).toBe(false);
 });
+it("falls back to an available model when reopening a removed selection", async () => {
+  const f = await providerFixture();
+  cleanup.push(f.close);
+  const removed = encodeModel({
+    providerId: "removed-provider",
+    modelId: "removed-model",
+  });
+  const ready = await f.open(
+    { model: removed, thinkingOption: "removed-thinking-level" },
+    {
+      version: 3,
+      data: { kind: "native", sessionId: "session-1", cwd: f.cwd },
+    },
+  );
+  expect(ready.type).toBe("session.ready");
+  const fallback = encodeModel({
+    providerId: "provider",
+    modelId: "model",
+  });
+  expect(
+    f.events.filter((e) => e.type === "session.config").at(-1),
+  ).toMatchObject({
+    config: {
+      model: fallback,
+      thinkingOption: "high",
+    },
+  });
+});
+it("rejects a removed model selected outside session restoration", async () => {
+  const f = await providerFixture();
+  cleanup.push(f.close);
+  const ready = await f.open();
+  expect(ready.type).toBe("session.ready");
+  const removed = encodeModel({
+    providerId: "removed-provider",
+    modelId: "removed-model",
+  });
+  await f.send({
+    type: "session.configure",
+    sessionId: "public",
+    requestId: "removed-model",
+    changes: { model: removed },
+  });
+  expect(
+    await f.wait(
+      (event) =>
+        (event.type === "request.completed" ||
+          event.type === "request.failed") &&
+        event.requestId === "removed-model",
+    ),
+  ).toMatchObject({
+    type: "request.failed",
+    error: { code: "INVALID_CONFIGURATION" },
+  });
+  expect(f.host.state.config.modelSelection).toMatchObject({
+    providerId: "provider",
+    modelId: "model",
+  });
+});
 it("preserves native Plan state on resume and keeps mode independent", async () => {
   const f = await providerFixture();
   cleanup.push(f.close);

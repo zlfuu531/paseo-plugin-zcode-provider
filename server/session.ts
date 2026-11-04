@@ -551,9 +551,13 @@ export class ZCodeSession {
   async applyInitialConfig(
     config: Partial<ProviderSessionConfig>,
   ): Promise<void> {
-    if (config.model !== undefined) await this.setModel(config.model);
-    if (config.thinkingOption !== undefined)
+    if (config.model !== undefined) {
+      // setModel also resolves a compatible reasoning level. Do not reapply a
+      // stale saved level after falling back to a different model.
+      await this.setModel(config.model, true);
+    } else if (config.thinkingOption !== undefined) {
       await this.setThinkingOption(config.thinkingOption);
+    }
     await this.configureMode(
       config.mode,
       config.settings?.plan_mode as boolean | undefined,
@@ -590,7 +594,7 @@ export class ZCodeSession {
         (this.state.config.planEnabled === true) === nextPlan,
     );
   }
-  async setModel(value: string | null): Promise<void> {
+  async setModel(value: string | null, allowFallback = false): Promise<void> {
     this.assertIdle();
     if (value === null)
       throw new AdapterError(
@@ -599,11 +603,20 @@ export class ZCodeSession {
       );
     const view = await readModelSelection(this.bridge);
     this.modelCatalog = view.models;
+    const requested = decodeModel(value);
     const selection = await resolveModelSelection(
       this.bridge,
       view,
-      decodeModel(value),
+      requested,
+      allowFallback,
     );
+    if (allowFallback && encodeModel(requested) !== encodeModel(selection))
+      this.logger.log("warn", "zcode.session.model_fallback", {
+        requestedProvider: requested.providerId,
+        requestedModel: requested.modelId,
+        provider: selection.providerId,
+        model: selection.modelId,
+      });
     this.assertIdle();
     await this.control("switchModelConfig", {
       provider: selection.providerId,
@@ -613,7 +626,8 @@ export class ZCodeSession {
     await this.conversation.waitFor(
       () =>
         this.state.config.modelSelection !== undefined &&
-        encodeModel(this.state.config.modelSelection) === value &&
+        encodeModel(this.state.config.modelSelection) ===
+          encodeModel(selection) &&
         this.state.config.thought === selection.options!.reasoningLevel,
     );
   }
