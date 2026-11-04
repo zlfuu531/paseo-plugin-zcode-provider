@@ -24,7 +24,7 @@ enables a capability in this fork and requires a running ZCode Desktop.
 diff --git a/packages/shared/src/runtimeEnv.ts b/packages/shared/src/runtimeEnv.ts
 --- a/packages/shared/src/runtimeEnv.ts
 +++ b/packages/shared/src/runtimeEnv.ts
-@@ -145,9 +145,33 @@
+@@ -145,9 +145,29 @@
  // 凭据捕获进本进程私有存储，只经 getCapturedZCodeCuaBrokerCredentials() 暴露给 bootstrap 的定向
  // 注入路径，绝不写回任何子进程 env。
  function captureZCodeCuaBrokerCredentials(env: Record<string, string | undefined>): void {
@@ -42,11 +42,7 @@ diff --git a/packages/shared/src/runtimeEnv.ts b/packages/shared/src/runtimeEnv.
 +      const fs = require("node:fs") as typeof import("node:fs");
 +      const helperPipe = fs
 +        .readdirSync("\\\\.\\pipe\\")
-+        .filter(
-+          (name) =>
-+            name.toLowerCase().startsWith("zcode-cua-helper-") &&
-+            name.toLowerCase() !== "zcode-cua-helper-default",
-+        )
++        .filter((name) => /^zcode-cua-helper-[0-9a-f]{16}$/i.test(name))
 +        .sort()
 +        .at(-1);
 +      if (helperPipe) {

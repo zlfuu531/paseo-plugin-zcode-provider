@@ -28,7 +28,7 @@ import {
 import type { Logger } from "../logger.js";
 import { PROVIDER_VERSION } from "../build-info.js";
 import { UNSUPPORTED_CAPABILITY_ENVIRONMENT } from "../unsupported-capabilities.js";
-import { zcodeCuaBrokerEnv } from "../cua-broker-env.js";
+import { ensureCuaBrokerEnv } from "../cua-helper.js";
 
 export type SettingsChannel =
   | "oauth"
@@ -133,19 +133,20 @@ export class ZCodeHostBridge implements HostBridge {
     this.ready = this.initialize();
     void this.ready.catch((error) => this.fail(error));
   }
-  static start(
+  static async start(
     runtime: DiscoveredRuntime,
     logger: Logger,
     environment: NodeJS.ProcessEnv = process.env,
     workspace = runtime.paths.installRoot,
-  ): ZCodeHostBridge {
+  ): Promise<ZCodeHostBridge> {
     assertRuntimeSupported(runtime);
+    const cuaEnv = await ensureCuaBrokerEnv(logger, environment);
     const child = spawn(runtime.paths.executable, [runtime.paths.serverEntry], {
       cwd: workspace,
       env: {
         ...runtimeEnvironment(environment),
         ...UNSUPPORTED_CAPABILITY_ENVIRONMENT,
-        ...zcodeCuaBrokerEnv(),
+        ...cuaEnv,
         ZCODE_SERVICE_AUTHORITY_MODE: "standalone-server",
         ZCODE_AGENT_SERVER_COMMAND: runtime.paths.executable,
         ZCODE_AGENT_SERVER_ARGS_JSON: JSON.stringify([

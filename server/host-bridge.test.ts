@@ -8,7 +8,10 @@ import { ZCodeHostBridge } from "./host/bridge.js";
 import type { DiscoveredRuntime } from "./discovery/types.js";
 import { logger } from "./logger.js";
 let directory: string, runtime: DiscoveredRuntime;
+let previousCuaHelper: string | undefined;
 beforeAll(async () => {
+  previousCuaHelper = process.env.PASEO_ZCODE_CUA_HELPER;
+  process.env.PASEO_ZCODE_CUA_HELPER = "0";
   directory = await mkdtemp(join(tmpdir(), "zcode-stdio-contract-"));
   const serverEntry = join(directory, "server.cjs");
   await build({
@@ -43,9 +46,12 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await rm(directory, { recursive: true, force: true });
+  if (previousCuaHelper === undefined)
+    delete process.env.PASEO_ZCODE_CUA_HELPER;
+  else process.env.PASEO_ZCODE_CUA_HELPER = previousCuaHelper;
 });
 it("negotiates stdio plus V4 and disables question auto resolution", async () => {
-  const bridge = ZCodeHostBridge.start(runtime, logger);
+  const bridge = await ZCodeHostBridge.start(runtime, logger);
   try {
     expect(await bridge.request("initialize", {}, z.unknown())).toEqual({
       available: true,
@@ -56,7 +62,7 @@ it("negotiates stdio plus V4 and disables question auto resolution", async () =>
   }
 });
 it("keeps Computer Use enabled and suppresses Browser Use and Visualize, whatever the caller sets", async () => {
-  const bridge = ZCodeHostBridge.start(runtime, logger, {
+  const bridge = await ZCodeHostBridge.start(runtime, logger, {
     ...process.env,
     ZCODE_CUA_PRODUCT_HELPER: "0",
     PASEO_ZCODE_SUPPRESSED_PLUGINS: "",
@@ -80,7 +86,7 @@ it("keeps Computer Use enabled and suppresses Browser Use and Visualize, whateve
 it.each(["bad-hello", "bad-v4"])(
   "rejects %s and collects the process",
   async (scenario) => {
-    const bridge = ZCodeHostBridge.start(runtime, logger, {
+    const bridge = await ZCodeHostBridge.start(runtime, logger, {
       ...process.env,
       STDIO_SCENARIO: scenario,
     });
@@ -94,7 +100,7 @@ it.each(["bad-hello", "bad-v4"])(
   },
 );
 it("passes positional arguments to settings services", async () => {
-  const bridge = ZCodeHostBridge.start(runtime, logger);
+  const bridge = await ZCodeHostBridge.start(runtime, logger);
   try {
     expect(
       await bridge.invoke(
@@ -109,7 +115,7 @@ it("passes positional arguments to settings services", async () => {
   }
 });
 it("cancels pending RPC bookkeeping on timeout without retry", async () => {
-  const bridge = ZCodeHostBridge.start(runtime, logger);
+  const bridge = await ZCodeHostBridge.start(runtime, logger);
   try {
     await expect(
       bridge.request("never", {}, z.unknown(), 20),
@@ -123,7 +129,7 @@ it("cancels pending RPC bookkeeping on timeout without retry", async () => {
   }
 });
 it("rejects pending requests on abnormal exit", async () => {
-  const bridge = ZCodeHostBridge.start(runtime, logger);
+  const bridge = await ZCodeHostBridge.start(runtime, logger);
   try {
     await expect(bridge.request("crash", {}, z.unknown())).rejects.toThrow();
   } finally {
@@ -131,7 +137,7 @@ it("rejects pending requests on abnormal exit", async () => {
   }
 });
 it("closes active subscriptions through EOF without racing an unsubscribe RPC", async () => {
-  const bridge = ZCodeHostBridge.start(runtime, logger);
+  const bridge = await ZCodeHostBridge.start(runtime, logger);
   await bridge.subscribe(
     { workspacePath: directory, sessionId: "test" },
     () => {},
