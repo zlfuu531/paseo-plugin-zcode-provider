@@ -4,10 +4,12 @@
 // terminal sessions for that reason.
 //
 // Fork note (2026-11-04): Computer Use is enabled so Paseo sessions can drive
-// the running ZCode Desktop's CUA broker, and Browser Use stays enabled to
-// match the local setup this branch was merged from. Browser Use is not
-// verified in the standalone Server; Visualize remains suppressed.
+// the running ZCode Desktop's CUA broker. Browser Use stays suppressed because
+// ZCode only allows its headless backend with --prompt, --target or tui, and
+// the provider launches app-server; Paseo's own browser tools cover browser
+// automation instead. Visualize also remains suppressed.
 export const SUPPRESSED_OFFICIAL_PLUGINS = [
+  "browser-use@zcode-plugins-official",
   "visualize@zcode-plugins-official",
 ] as const;
 

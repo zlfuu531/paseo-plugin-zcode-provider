@@ -55,7 +55,7 @@ it("negotiates stdio plus V4 and disables question auto resolution", async () =>
     await bridge.close();
   }
 });
-it("keeps Computer Use enabled and suppresses only Visualize, whatever the caller sets", async () => {
+it("keeps Computer Use enabled and suppresses Browser Use and Visualize, whatever the caller sets", async () => {
   const bridge = ZCodeHostBridge.start(runtime, logger, {
     ...process.env,
     ZCODE_CUA_PRODUCT_HELPER: "0",
@@ -70,7 +70,8 @@ it("keeps Computer Use enabled and suppresses only Visualize, whatever the calle
       ),
     ).toEqual({
       ZCODE_CUA_PRODUCT_HELPER: "1",
-      PASEO_ZCODE_SUPPRESSED_PLUGINS: "visualize@zcode-plugins-official",
+      PASEO_ZCODE_SUPPRESSED_PLUGINS:
+        "browser-use@zcode-plugins-official,visualize@zcode-plugins-official",
     });
   } finally {
     await bridge.close();
