@@ -109,16 +109,16 @@ describe("pins", () => {
 
   it("pins the published ZCode runtime archive", () => {
     expect(MANAGED_ZCODE_ARCHIVE.url).toMatch(
-      /^https:\/\/github\.com\/supermomonga\/paseo-plugin-zcode-provider\/releases\/download\/zcode-runtime-v/u,
+      /^https:\/\/github\.com\/zlfuu531\/paseo-plugin-zcode-provider\/releases\/download\/zcode-runtime-v/u,
     );
     expect(MANAGED_ZCODE_ARCHIVE.sha256).toMatch(/^[0-9a-f]{64}$/u);
     expect(MANAGED_ZCODE_ARCHIVE.size).toBeGreaterThan(0);
   });
 
-  it("maps only the five managed platforms", () => {
-    expect(managedPlatform("darwin", "arm64")).toBe("darwin-arm64");
+  it("offers managed installation only for the released Windows x64 build", () => {
+    expect(managedPlatform("darwin", "arm64")).toBeUndefined();
     expect(managedPlatform("win32", "x64")).toBe("win-x64");
-    expect(managedPlatform("linux", "arm64")).toBe("linux-arm64");
+    expect(managedPlatform("linux", "arm64")).toBeUndefined();
     expect(managedPlatform("darwin", "x64")).toBeUndefined();
     expect(managedPlatform("freebsd", "x64")).toBeUndefined();
   });

@@ -31,39 +31,9 @@ env:
   NODE_VERSION: "24.21.0"
 
 jobs:
-  windows-host:
-    name: Build Windows ${{ matrix.arch }} helper
-    # The official build script selects Visual Studio 17 2022 explicitly.
-    runs-on: windows-2022
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: x64
-            cmakeArch: x64
-          - arch: arm64
-            cmakeArch: ARM64
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          repository: zai-org/ZCode
-          ref: b95ebaffeab641907b38652f45c1502bd762972d
-          persist-credentials: false
-      - uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      - name: Build the official helper
-        shell: pwsh
-        run: node scripts/build-windows-runtime-host.mjs --arch=${{ matrix.arch }} --output-dir=helper
-      - uses: actions/upload-artifact@v4
-        with:
-          name: windows-host-${{ matrix.arch }}
-          path: helper/
-          if-no-files-found: error
-
   build:
     name: Build runtime archive
-    needs: windows-host
+    if: github.repository == 'supermomonga/paseo-plugin-zcode-provider'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
@@ -110,16 +80,12 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm exec tsc -b packages/shared
           node scripts/build-zcode.mjs --base-url https://example.invalid/zcode/
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: windows-host-*
-          path: windows-hosts
       - name: Add upstream notices, patches and build provenance
         id: package
         working-directory: plugin
         env:
           TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
-        run: node scripts/package-zcode-runtime.mjs package --source ../zcode-source --out ../runtime-release --windows-hosts ../windows-hosts ${TAG:+--tag "$TAG"}
+        run: node scripts/package-zcode-runtime.mjs package --source ../zcode-source --out ../runtime-release ${TAG:+--tag "$TAG"}
       # Only verify and publish in this run use the archive; tags publish it
       # as a release asset.
       - uses: actions/upload-artifact@v4

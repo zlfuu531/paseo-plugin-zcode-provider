@@ -18,7 +18,6 @@ import { parseArgs } from "node:util";
 import { runMain, validateVersion } from "./releases/common.mjs";
 import { verifyAppliedZCodePatches } from "./apply-zcode-patches.mjs";
 import { loadZCodeManifest } from "./zcode-manifest.mjs";
-import { stageSecureRuntimeAssets } from "./secure-runtime-assets.mjs";
 
 // Repackages the official integrated CLI archive, built from the pinned source
 // with patches/zcode applied (ADR 19). Only upstream license material, the
@@ -116,9 +115,8 @@ function createArchive(staging, output, mtime) {
   execFileSync("tar", [...options, output, "-C", staging, "zcode"]);
 }
 
-export async function packageRuntime({ source, out, tag, windowsHosts }) {
-  const { ZCODE_RUNTIME_SOURCE_COMMIT: ZCODE_SOURCE_COMMIT } =
-    await loadZCodeManifest();
+export async function packageRuntime({ source, out, tag }) {
+  const { ZCODE_SOURCE_COMMIT } = await loadZCodeManifest();
   const commit = git(source, "rev-parse", "HEAD");
   if (commit !== ZCODE_SOURCE_COMMIT)
     throw new Error(
@@ -149,8 +147,6 @@ export async function packageRuntime({ source, out, tag, windowsHosts }) {
     const root = join(staging, "zcode");
     await assertRuntimeLayout(root, REQUIRED_RUNTIME_FILES);
     await assertProductionProviderConfig(source, root);
-    if (version === "3.18.0")
-      await stageSecureRuntimeAssets({ source, root, windowsHosts });
     for (const file of UPSTREAM_NOTICE_FILES) {
       try {
         await access(join(root, file));
@@ -229,12 +225,11 @@ runMain(import.meta.url, async () => {
       source: { type: "string" },
       out: { type: "string" },
       tag: { type: "string" },
-      "windows-hosts": { type: "string" },
     },
   });
   if (positionals[0] === "commit") {
-    const { ZCODE_RUNTIME_SOURCE_COMMIT } = await loadZCodeManifest();
-    console.log(ZCODE_RUNTIME_SOURCE_COMMIT);
+    const { ZCODE_SOURCE_COMMIT } = await loadZCodeManifest();
+    console.log(ZCODE_SOURCE_COMMIT);
     return;
   }
   if (positionals[0] !== "package" || !values.source || !values.out)
@@ -247,9 +242,6 @@ runMain(import.meta.url, async () => {
         source: resolve(values.source),
         out: resolve(values.out),
         tag: values.tag || undefined,
-        windowsHosts: values["windows-hosts"]
-          ? resolve(values["windows-hosts"])
-          : undefined,
       }),
       null,
       2,

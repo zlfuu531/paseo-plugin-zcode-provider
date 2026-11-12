@@ -66,16 +66,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: darwin-arm64
-            runner: macos-15
-          - target: linux-x64
-            runner: ubuntu-24.04
-          - target: linux-arm64
-            runner: ubuntu-24.04-arm
           - target: win-x64
             runner: windows-2025
-          - target: win-arm64
-            runner: windows-11-arm
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
     defaults:

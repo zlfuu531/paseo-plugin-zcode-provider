@@ -16,8 +16,8 @@ This is an unofficial plugin. It is not endorsed or maintained by ZCode or Z.ai.
 | -------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | Paseo          | 0.15.0 or later; development SDK 0.15.4                                                                                                 |
 | Plugin Node.js | 22.12.0 or later (the Paseo daemon's runtime)                                                                                           |
-| Managed setup  | darwin-arm64, linux-x64, linux-arm64, win-x64, win-arm64                                                                                |
-| ZCode          | Managed: 3.18.0 (release `3.18.0-paseo.1`) with Node.js 24.21.0. Overrides: stable Server 3.18.0+ / Agent 0.17.1+ with Node.js 24.14.0+ |
+| Managed setup  | Windows x64 (win-x64); other platforms require an external compatible runtime                                                           |
+| ZCode          | Managed: 3.18.0 (release `3.18.0-paseo.4`) with Node.js 24.21.0. Overrides: stable Server 3.18.0+ / Agent 0.17.1+ with Node.js 24.14.0+ |
 
 ## Installation
 
@@ -39,7 +39,7 @@ Open **Settings → Plugins → zcode-provider → Settings**. The screen has th
 On the **Runtime** tab, choose **Download and install**. The screen lists every download, its SHA-256, size and license before you start. Setup runs on the machine hosting the daemon:
 
 - Node.js 24.21.0 from nodejs.org.
-- The ZCode runtime 3.18.0 from this fork's [releases](https://github.com/zlfuu531/paseo-plugin-zcode-provider/releases/tag/zcode-runtime-v3.18.0-paseo.1) (`3.18.0-paseo.1`). ZCode does not publish its integrated CLI, so this is an **unofficial build** of the public source with the patches in [patches/zcode](patches/zcode) applied (ADR 19). The patches hide Computer Use, Browser Use and Visualize, which cannot run or render here. The archive includes native credential keyring packages and source-built Windows process helpers. It is not endorsed or maintained by ZCode or Z.ai.
+- The ZCode runtime 3.18.0 from this fork's [releases](https://github.com/zlfuu531/paseo-plugin-zcode-provider/releases/tag/zcode-runtime-v3.18.0-paseo.4) (`3.18.0-paseo.4`). ZCode does not publish its integrated CLI, so this is an **unofficial build** of the public source with the patches in [patches/zcode](patches/zcode) applied (ADR 19). The patches hide Computer Use, Browser Use and Visualize, which cannot run or render here. This Windows x64 archive includes native credential keyring packages and a source-built Windows process helper. It is not endorsed or maintained by ZCode or Z.ai.
 
 Both archives are verified against SHA-256 values pinned in the plugin and extracted to the daemon user's data directory:
 

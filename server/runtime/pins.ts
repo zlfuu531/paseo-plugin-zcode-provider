@@ -55,12 +55,12 @@ export const MANAGED_NODE_ARCHIVES: Readonly<
 // Published by .github/workflows/zcode-runtime-release.yml from the pinned
 // source with patches/zcode applied (ADR 19). The same archive serves every
 // managed platform.
-export const MANAGED_ZCODE_VERSION = "3.17.2";
-const MANAGED_ZCODE_RELEASE = `${MANAGED_ZCODE_VERSION}-paseo.1`;
+export const MANAGED_ZCODE_VERSION = "3.18.0";
+const MANAGED_ZCODE_RELEASE = `${MANAGED_ZCODE_VERSION}-paseo.4`;
 export const MANAGED_ZCODE_ARCHIVE: PinnedArchive = {
-  url: `https://github.com/supermomonga/paseo-plugin-zcode-provider/releases/download/zcode-runtime-v${MANAGED_ZCODE_RELEASE}/zcode-runtime-${MANAGED_ZCODE_RELEASE}.tar.gz`,
-  sha256: "24e3a9b03260d7b800958ccba4cfdc8233eee67936170636da79d440245bd15d",
-  size: 83_086_942,
+  url: `https://github.com/zlfuu531/paseo-plugin-zcode-provider/releases/download/zcode-runtime-v${MANAGED_ZCODE_RELEASE}/zcode-runtime-${MANAGED_ZCODE_RELEASE}.tar.gz`,
+  sha256: "0f53b79af93e6437309589cf1fc4f81eafcca843e5c3def868373f47bded23da",
+  size: 9_444_499,
 };
 
 export function managedPlatform(
@@ -68,7 +68,6 @@ export function managedPlatform(
   arch: string = process.arch,
 ): ManagedPlatform | undefined {
   const key = `${platform === "win32" ? "win" : platform}-${arch}`;
-  return Object.hasOwn(MANAGED_NODE_ARCHIVES, key)
-    ? (key as ManagedPlatform)
-    : undefined;
+  // This fork release ships the Windows x64 runtime that was actually tested.
+  return key === "win-x64" ? "win-x64" : undefined;
 }

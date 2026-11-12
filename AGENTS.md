@@ -6,8 +6,8 @@ This fork tracks upstream provider 0.5.2. `ZCODE_SOURCE_COMMIT` remains the
 compatible 3.17.2 wire-contract baseline; `ZCODE_RUNTIME_SOURCE_COMMIT` pins
 the 3.18.0 runtime. Do not restore the local machine's runtime override into
 the server entrypoint. Release assets must be built from the pinned public
-source, contain verified native keyring packages and Windows helpers, and
-be pinned by SHA-256 after publication. Retain the unavailable-model session
+source, contain verified native keyring packages and the Windows x64 helper, and
+be pinned by SHA-256 after publication. This release offers managed setup only on Windows x64. Retain the unavailable-model session
 recovery change. Never publish this fork to upstream's npm package.
 
 ## Project Structure
