@@ -33,7 +33,8 @@ env:
 jobs:
   windows-host:
     name: Build Windows ${{ matrix.arch }} helper
-    runs-on: windows-2025
+    # The official build script selects Visual Studio 17 2022 explicitly.
+    runs-on: windows-2022
     strategy:
       fail-fast: false
       matrix:
