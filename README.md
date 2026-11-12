@@ -1,5 +1,9 @@
 # ZCode Provider for Paseo
 
+This fork tracks upstream 0.5.2 and adds ZCode 3.18 account compatibility and
+recovery of sessions whose saved model is no longer available. See the
+[fork changes and Chinese upgrade guide](docs/FORK.zh-CN.md).
+
 Use ZCode models, tools and conversations through Paseo's public Provider API. The plugin launches the **official stdio Services Server from the integrated ZCode CLI distribution**, which it can set up for you. Authentication, models, tools and conversation storage remain owned by ZCode. ZCode Desktop is not required.
 
 > Mode/Plan restoration is guaranteed when Paseo supplies both saved settings on resume. Without them, the pinned ZCode source can restore an older editing mode and drop Plan. That upstream defect remains unresolved and is outside the supported restoration contract. See [verification and remaining checks](docs/verification.md).
@@ -13,20 +17,20 @@ This is an unofficial plugin. It is not endorsed or maintained by ZCode or Z.ai.
 | Paseo          | 0.15.0 or later; development SDK 0.15.4                                                                                                 |
 | Plugin Node.js | 22.12.0 or later (the Paseo daemon's runtime)                                                                                           |
 | Managed setup  | darwin-arm64, linux-x64, linux-arm64, win-x64, win-arm64                                                                                |
-| ZCode          | Managed: 3.17.2 (release `3.17.2-paseo.1`) with Node.js 24.21.0. Overrides: stable Server 3.14.0+ / Agent 0.16.9+ with Node.js 24.14.0+ |
+| ZCode          | Managed: 3.18.0 (release `3.18.0-paseo.1`) with Node.js 24.21.0. Overrides: stable Server 3.18.0+ / Agent 0.17.1+ with Node.js 24.14.0+ |
 
 ## Installation
 
-Enable **Settings → Plugins → Enable plugins** for the target daemon, then install the [npm package](https://www.npmjs.com/package/paseo-plugin-zcode-provider) and inspect:
+Enable **Settings → Plugins → Enable plugins** for the target daemon, then install this fork from GitHub:
 
 ```bash
-paseo plugin add npm:paseo-plugin-zcode-provider
+paseo plugin add github:zlfuu531/paseo-plugin-zcode-provider --ref main
 paseo plugin ls
 ```
 
-You can also paste `npm:paseo-plugin-zcode-provider` into **Settings → Plugins → Plugin source**. npm packages require npm on the daemon host. Paseo installs the released version and compiles the plugin. Update with `paseo plugin update zcode-provider`. Plugins execute with the daemon user's permissions.
+You can also paste `github:zlfuu531/paseo-plugin-zcode-provider` into **Settings → Plugins → Plugin source**. Git installation requires Git and npm on the daemon host. Update with `paseo plugin update zcode-provider`. Plugins execute with the daemon user's permissions.
 
-To follow the `main` branch instead, install the Git repository with `paseo plugin add github:supermomonga/paseo-plugin-zcode-provider`. The form without `github:` looks the plugin up in Paseo's plugin registry, which does not list it. Paseo prepares the checkout with `npm ci`.
+If another `zcode-provider` installation is already configured, remove that plugin registration before installing this fork. Its managed runtime and ZCode data are retained. The unscoped npm package belongs to upstream and does not contain this fork's fixes.
 
 ## Setup
 
@@ -35,7 +39,7 @@ Open **Settings → Plugins → zcode-provider → Settings**. The screen has th
 On the **Runtime** tab, choose **Download and install**. The screen lists every download, its SHA-256, size and license before you start. Setup runs on the machine hosting the daemon:
 
 - Node.js 24.21.0 from nodejs.org.
-- The ZCode runtime 3.17.2 from this repository's [releases](https://github.com/supermomonga/paseo-plugin-zcode-provider/releases/tag/zcode-runtime-v3.17.2-paseo.1) (`3.17.2-paseo.1`). ZCode does not publish its integrated CLI, so this is an **unofficial build** of the public source with the patches in [patches/zcode](patches/zcode) applied (ADR 19), made and verified by CI. The patches hide Computer Use, Browser Use and Visualize, which cannot run or render here. It is not endorsed or maintained by ZCode or Z.ai.
+- The ZCode runtime 3.18.0 from this fork's [releases](https://github.com/zlfuu531/paseo-plugin-zcode-provider/releases/tag/zcode-runtime-v3.18.0-paseo.1) (`3.18.0-paseo.1`). ZCode does not publish its integrated CLI, so this is an **unofficial build** of the public source with the patches in [patches/zcode](patches/zcode) applied (ADR 19). The patches hide Computer Use, Browser Use and Visualize, which cannot run or render here. The archive includes native credential keyring packages and source-built Windows process helpers. It is not endorsed or maintained by ZCode or Z.ai.
 
 Both archives are verified against SHA-256 values pinned in the plugin and extracted to the daemon user's data directory:
 
@@ -78,7 +82,7 @@ export PASEO_ZCODE_NODE=/absolute/path/to/node       # ordinary Node.js 24.14.0 
 
 Session environment variables are forwarded, subject to ZCode's own proxy, certificate and runtime environment handling. As Desktop does, the plugin sets `ZCODE_APP_VERSION` to the runtime's ZCode version, so model requests report it instead of the CLI's version.
 
-The source baseline is `a9fe401eede6e6e5e01be9048679c206fe6f02d9` (ZCode 3.17.2, upstream tag `v3.17.2`). The managed runtime passed the stdio runtime contract on all five managed platforms in CI. See the [verification record](docs/verification.md) for exact coverage.
+The runtime source baseline is `b95ebaffeab641907b38652f45c1502bd762972d` (ZCode 3.18.0). The compatible vendored wire contracts remain pinned to `a9fe401eede6e6e5e01be9048679c206fe6f02d9` (3.17.2). Runtime builds are tested separately against those contracts. See the [fork verification record](docs/FORK.zh-CN.md) and the release workflow for actual platform coverage.
 
 ## Behavior
 

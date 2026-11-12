@@ -1,4 +1,6 @@
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { once } from "node:events";
 import { z } from "zod";
 import {
@@ -139,6 +141,12 @@ export class ZCodeHostBridge implements HostBridge {
     workspace = runtime.paths.installRoot,
   ): ZCodeHostBridge {
     assertRuntimeSupported(runtime);
+    const helper = join(
+      runtime.paths.installRoot,
+      "tools/runtime-host",
+      runtime.identity.platform,
+      "zcode-runtime-host.exe",
+    );
     const child = spawn(runtime.paths.executable, [runtime.paths.serverEntry], {
       cwd: workspace,
       env: {
@@ -147,6 +155,11 @@ export class ZCodeHostBridge implements HostBridge {
         // The Agent inherits this and reports it in model request headers, or
         // its CLI version without it. Desktop and the remote Core set it too.
         ZCODE_APP_VERSION: runtime.identity.appVersion,
+        // ZCode 3.18 resolves its Windows process helper from this runtime.
+        ZCODE_SERVER_RUNTIME_ROOT: runtime.paths.installRoot,
+        ...(runtime.identity.platform.startsWith("win32-") && existsSync(helper)
+          ? { ZCODE_RUNTIME_HOST_PATH: helper }
+          : {}),
         ZCODE_SERVICE_AUTHORITY_MODE: "standalone-server",
         ZCODE_AGENT_SERVER_COMMAND: runtime.paths.executable,
         ZCODE_AGENT_SERVER_ARGS_JSON: JSON.stringify([

@@ -27,3 +27,11 @@ Node.js は利用者のマシンが nodejs.org の公式成果物を直接取得
 アイコンの出典に対応する上流ライセンスを [vendor/paseo/LICENSE](vendor/paseo/LICENSE) に保持しています。Copyright (c) 2025-present Mohamed Boudra。
 
 リリース監視スクリプトとワークフローは、[zcode-acp commit 7b3af187d7ee732e9043aed873a863fc855625c2](https://github.com/supermomonga/zcode-acp/tree/7b3af187d7ee732e9043aed873a863fc855625c2) の `scripts/check-zcode-releases.ts`、対応テスト、`.github/workflows/zcode-release-check.yml` を参考にしています。対応バージョンより新しいリリースの取得、変更履歴付きIssue作成、クローズ済みを含む重複防止をNode.js向けに実装し、Paseoのプレリリース・正式版にも適用しています。
+
+# Fork maintenance
+
+This fork is maintained at https://github.com/zlfuu531/paseo-plugin-zcode-provider.
+It derives from supermomonga/paseo-plugin-zcode-provider 0.5.2 under the MIT
+license. Fork changes add ZCode 3.18 credential/runtime compatibility,
+recognition of the CN account identity, and recovery of sessions with removed
+models. Original copyrights, licenses and notices below are retained.

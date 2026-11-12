@@ -125,6 +125,22 @@ export const sessionStateSchema = z.discriminatedUnion("status", [
   z.object({ status: z.literal("reauthentication-required") }),
 ]);
 export const familySchema = z.enum(["zai", "bigmodel"]).nullable();
+// OAuth identity and model-plan family are separate in ZCode 3.18. The CN
+// identity is valid, but does not itself select a BigModel or Z.ai plan.
+export const oauthProviderSchema = z
+  .enum(["zai", "bigmodel", "zai_cn"])
+  .nullable();
+
+export function resolveAccountFamily(
+  domain: string | undefined,
+  active: z.output<typeof oauthProviderSchema>,
+): AccountFamily | undefined {
+  const configured = familySchema.safeParse(domain || null);
+  return (
+    (configured.success ? configured.data : null) ??
+    (active === "zai_cn" ? undefined : (active ?? undefined))
+  );
+}
 export const accountSettingsSchema = z.object({
   providerFamilyDomain: z.string().optional(),
   providerFamilyDomainUpdatedAt: z.number().optional(),
@@ -403,14 +419,11 @@ export class AccountService {
   private async read(host: SettingsHost): Promise<AccountView> {
     const [session, active, settings, view] = await Promise.all([
       host.invoke("oauth", "restoreCachedSessionState", [], sessionStateSchema),
-      host.invoke("oauth", "getActiveProvider", [], familySchema),
+      host.invoke("oauth", "getActiveProvider", [], oauthProviderSchema),
       host.invoke("setting", "get", [], accountSettingsSchema),
       host.invoke("provider-settings", "getView", [], nativeViewSchema),
     ]);
-    const domain = familySchema.safeParse(
-      settings.providerFamilyDomain || null,
-    );
-    const family = (domain.success ? domain.data : null) ?? active ?? undefined;
+    const family = resolveAccountFamily(settings.providerFamilyDomain, active);
     const account: ReadyAccountView["account"] =
       session.status === "signed-out"
         ? { state: "signed-out" }

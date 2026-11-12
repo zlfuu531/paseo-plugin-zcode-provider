@@ -2,7 +2,10 @@ import { gte, parse } from "semver";
 import type { RuntimeIdentity } from "./types.js";
 
 export const ZCODE_SOURCE_COMMIT = "a9fe401eede6e6e5e01be9048679c206fe6f02d9";
-export const MINIMUM_ZCODE_VERSION = { app: "3.14.0", cli: "0.16.9" } as const;
+// The compatible wire contracts and runtime source are pinned independently.
+export const ZCODE_RUNTIME_SOURCE_COMMIT =
+  "b95ebaffeab641907b38652f45c1502bd762972d";
+export const MINIMUM_ZCODE_VERSION = { app: "3.18.0", cli: "0.17.1" } as const;
 export const MINIMUM_NODE_VERSION = "24.14.0";
 
 export function assessCompatibility(identity: RuntimeIdentity): {
@@ -33,4 +36,4 @@ export function assessCompatibility(identity: RuntimeIdentity): {
 }
 
 // Last reviewed public changelog release; source versions are not releases.
-export const LAST_REVIEWED_ZCODE_RELEASE = "3.17.2";
+export const LAST_REVIEWED_ZCODE_RELEASE = "3.18.0";

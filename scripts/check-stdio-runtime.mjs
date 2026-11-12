@@ -299,6 +299,8 @@ try {
     ZCODE_DATA_BASE_DIR: directory,
     ZCODE_STORAGE_DIR: join(directory, ".zcode"),
     ZCODE_SESSION_DB_PATH: join(directory, "sessions.db"),
+    // Isolated synthetic credentials do not need a desktop keyring on CI.
+    ZCODE_CREDENTIAL_SECRET: "zcode-isolated-contract-fixture-credentials-only",
     TMPDIR: join(directory, "tmp"),
     ...(override
       ? { PASEO_ZCODE_RUNTIME: runtime, PASEO_ZCODE_NODE: node }

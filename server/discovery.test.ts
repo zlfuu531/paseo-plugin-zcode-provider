@@ -58,12 +58,12 @@ async function executableFixture(identity: {
   await writeFile(join(root, "agent/provider/zcode-builtin.json"), "{}");
   await writeFile(
     join(root, "package.json"),
-    JSON.stringify({ name: "zcode-runtime", version: "3.14.0" }),
+    JSON.stringify({ name: "zcode-runtime", version: "3.18.0" }),
   );
   const executable = join(root, "node-fixture");
   await writeFile(
     executable,
-    `#!${process.execPath}\nif(process.argv[2]==="-e")console.log(${JSON.stringify(JSON.stringify({ ...identity, platform: process.platform, arch: process.arch }))});else console.log(process.argv[2].includes("server/remote")?"3.14.0":"0.16.9");\n`,
+    `#!${process.execPath}\nif(process.argv[2]==="-e")console.log(${JSON.stringify(JSON.stringify({ ...identity, platform: process.platform, arch: process.arch }))});else console.log(process.argv[2].includes("server/remote")?"3.18.0":"0.17.1");\n`,
     { mode: 0o755 },
   );
   return {

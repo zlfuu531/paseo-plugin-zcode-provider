@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, fork/zcode-3.18.0]
   workflow_dispatch:
 
 permissions:
@@ -61,6 +61,7 @@ jobs:
 
   runtime:
     name: Managed runtime contract (${{ matrix.target }})
+    if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
     strategy:
       fail-fast: false
       matrix:
@@ -103,6 +104,7 @@ jobs:
     name: Real ZCode E2E
     needs: runtime
     if: >-
+      vars.RUN_LIVE_MODEL_E2E == 'true' &&
       github.actor != 'dependabot[bot]' &&
       (github.event_name != 'pull_request' ||
        github.event.pull_request.head.repo.full_name == github.repository)

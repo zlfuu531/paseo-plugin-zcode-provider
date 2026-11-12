@@ -7,7 +7,8 @@ import type {
 import { z } from "zod";
 import {
   accountSettingsSchema,
-  familySchema,
+  oauthProviderSchema,
+  resolveAccountFamily,
   nativeViewSchema,
   sessionStateSchema,
   type AccountService,
@@ -177,12 +178,11 @@ interface AccountState {
 async function readAccount(host: SettingsHost): Promise<AccountState> {
   const [session, active, settings, view] = await Promise.all([
     host.invoke("oauth", "restoreCachedSessionState", [], sessionStateSchema),
-    host.invoke("oauth", "getActiveProvider", [], familySchema),
+    host.invoke("oauth", "getActiveProvider", [], oauthProviderSchema),
     host.invoke("setting", "get", [], accountSettingsSchema),
     host.invoke("provider-settings", "getView", [], nativeViewSchema),
   ]);
-  const domain = familySchema.safeParse(settings.providerFamilyDomain || null);
-  const family = (domain.success ? domain.data : null) ?? active ?? undefined;
+  const family = resolveAccountFamily(settings.providerFamilyDomain, active);
   return { session, family, view };
 }
 

@@ -131,6 +131,23 @@ function fixture(options: { start?: () => Promise<SettingsHost> } = {}) {
 }
 
 describe("usage source discovery", () => {
+  it("discovers the selected plan for a CN OAuth identity", async () => {
+    const { host, account, usage } = fixture();
+    host.family = "zai_cn";
+    host.handlers["setting.get"] = () => ({
+      providerFamilyDomain: "bigmodel",
+    });
+    try {
+      const accounts = await usage.source.discover({ kind: "global" });
+      expect(accounts).toHaveLength(1);
+      expect(accounts[0]).toMatchObject({
+        input: { providerId: "account:bigmodel-individual-coding-plan" },
+      });
+    } finally {
+      usage.dispose();
+      await account.close();
+    }
+  });
   it("finds the entitled individual plan of the signed-in family", async () => {
     const { usage } = fixture();
     const accounts = await usage.source.discover({ kind: "global" });

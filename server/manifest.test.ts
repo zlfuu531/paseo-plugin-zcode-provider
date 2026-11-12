@@ -11,21 +11,21 @@ const base = {
   cliSha256: "a".repeat(64),
   serverSha256: "b".repeat(64),
 };
-it.each(["3.14.0", "3.14.1", "4.0.0", "10.0.0"])(
+it.each(["3.18.0", "3.18.1", "4.0.0", "10.0.0"])(
   "allows stable Server %s without claiming verification",
   (appVersion) =>
     expect(assessCompatibility({ ...base, appVersion }).status).toBe(
       "supported",
     ),
 );
-it.each(["3.13.9", "3.14.0-beta.1", "4.0.0-rc.1", "bad", ""])(
+it.each(["3.17.2", "3.18.0-beta.1", "4.0.0-rc.1", "bad", ""])(
   "rejects Server %s",
   (appVersion) =>
     expect(assessCompatibility({ ...base, appVersion }).status).toBe(
       "unsupported",
     ),
 );
-it.each(["0.16.8", "0.17.0-rc.1", "bad", ""])(
+it.each(["0.17.0", "0.17.1-rc.1", "bad", ""])(
   "rejects Agent %s",
   (cliVersion) =>
     expect(assessCompatibility({ ...base, cliVersion }).status).toBe(

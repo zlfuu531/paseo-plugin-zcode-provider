@@ -1,6 +1,6 @@
 {
   "name": "paseo-plugin-zcode-provider",
-  "version": "0.5.2",
+  "version": "0.5.2-fork.1",
   "description": "Unofficial Paseo provider plugin for ZCode, using the official stdio Services Server of the integrated ZCode CLI.",
   "keywords": [
     "paseo",
@@ -9,11 +9,11 @@
     "z.ai",
     "glm"
   ],
-  "homepage": "https://github.com/supermomonga/paseo-plugin-zcode-provider#readme",
-  "bugs": "https://github.com/supermomonga/paseo-plugin-zcode-provider/issues",
+  "homepage": "https://github.com/zlfuu531/paseo-plugin-zcode-provider#readme",
+  "bugs": "https://github.com/zlfuu531/paseo-plugin-zcode-provider/issues",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/supermomonga/paseo-plugin-zcode-provider.git"
+    "url": "git+https://github.com/zlfuu531/paseo-plugin-zcode-provider.git"
   },
   "license": "MIT",
   "type": "module",
@@ -27,7 +27,8 @@
     "shared/",
     "NOTICE.md",
     "vendor/",
-    "!**/*.test.ts"
+    "!**/*.test.ts",
+    "OVERVIEW.md"
   ],
   "engines": {
     "node": ">=22.12.0"

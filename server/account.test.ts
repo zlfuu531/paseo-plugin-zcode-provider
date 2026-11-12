@@ -200,6 +200,34 @@ async function ready(promise: ReturnType<AccountService["view"]>) {
 }
 
 describe("account view", () => {
+  it("recognizes the CN identity and uses the configured model family", async () => {
+    const { host, account } = service();
+    host.session = {
+      status: "authenticated",
+      userInfo: { id: "fixture", username: "fixture" },
+    };
+    host.handlers["oauth.getActiveProvider"] = () => "zai_cn";
+    host.settings = { providerFamilyDomain: "bigmodel" };
+    try {
+      const view = await ready(account.view());
+      expect(view.account).toMatchObject({
+        state: "signed-in",
+        family: "bigmodel",
+      });
+      expect(view.plans.map((plan) => plan.providerId)).toEqual([
+        "account:bigmodel-start-plan",
+      ]);
+      host.settings = {};
+      const unselected = await ready(account.view());
+      expect(unselected.account.state).toBe("signed-in");
+      expect(unselected.account).not.toHaveProperty("family");
+      expect(unselected.plans).toEqual([]);
+      expect(host.called("oauth.logout")).toHaveLength(0);
+      expect(host.called("setting.update")).toHaveLength(0);
+    } finally {
+      await account.close();
+    }
+  });
   it("shows only the signed-in family's plans and never returns API keys", async () => {
     const { host, account } = service();
     host.session = {

@@ -94,6 +94,23 @@ it("gives the Server the runtime's app version, as Desktop does", async () => {
     await bridge.close();
   }
 });
+it("resolves Windows process helpers from the selected runtime", async () => {
+  const bridge = ZCodeHostBridge.start(runtime, logger, {
+    ...process.env,
+    ZCODE_SERVER_RUNTIME_ROOT: "/different-runtime",
+  });
+  try {
+    expect(
+      await bridge.request(
+        "readEnvironment",
+        ["ZCODE_SERVER_RUNTIME_ROOT"],
+        z.unknown(),
+      ),
+    ).toEqual({ ZCODE_SERVER_RUNTIME_ROOT: runtime.paths.installRoot });
+  } finally {
+    await bridge.close();
+  }
+});
 it.each(["bad-hello", "bad-v4"])(
   "rejects %s and collects the process",
   async (scenario) => {
