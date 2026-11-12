@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import {
   lockedKeyringIntegrity,
   verifyWindowsHelper,
+  windowsHelperSourceDigests,
 } from "../scripts/secure-runtime-assets.mjs";
 
 test("uses the exact keyring package and integrity from the source lock", () => {
@@ -30,4 +31,17 @@ test("rejects malformed and wrong-architecture Windows helper binaries", () => {
   expect(() => verifyWindowsHelper(bytes, "x64")).not.toThrow();
   expect(() => verifyWindowsHelper(bytes, "arm64")).toThrow();
   expect(() => verifyWindowsHelper(Buffer.from("invalid"), "x64")).toThrow();
+});
+
+test("accepts only LF and CRLF encodings of the pinned helper source", () => {
+  const lf = [Buffer.from("line1\nline2\n"), Buffer.from("project(example)\n")];
+  const crlf = lf.map((bytes) =>
+    Buffer.from(bytes.toString().replace(/\n/g, "\r\n")),
+  );
+  expect(windowsHelperSourceDigests(lf)).toEqual(
+    windowsHelperSourceDigests(crlf),
+  );
+  const changed = windowsHelperSourceDigests([Buffer.from("changed\n"), lf[1]]);
+  for (const hash of changed)
+    expect(windowsHelperSourceDigests(lf).has(hash)).toBe(false);
 });

@@ -26,6 +26,19 @@ export function verifyWindowsHelper(bytes, arch) {
     throw new Error(`Invalid Windows ${arch} runtime helper`);
 }
 
+export function windowsHelperSourceDigests(parts) {
+  // Git may check out the same pinned C++ sources as LF on Linux and CRLF on
+  // Windows. The official helper build records raw bytes, so accept exactly
+  // those two newline encodings of the same source, not arbitrary changes.
+  const lf = parts.map((bytes) =>
+    bytes.toString("utf8").replace(/\r\n/g, "\n"),
+  );
+  return new Set([
+    digest(Buffer.from(lf.join(""))),
+    digest(Buffer.from(lf.map((text) => text.replace(/\n/g, "\r\n")).join(""))),
+  ]);
+}
+
 export function lockedKeyringIntegrity(lock, name) {
   const escaped = `@napi-rs/${name}@2.1.2`.replace(
     /[.*+?^${}()|[\]\\]/g,
@@ -94,12 +107,13 @@ export async function stageSecureRuntimeAssets({ source, root, windowsHosts }) {
       "ZCode 3.18 packaging requires both Windows runtime helpers",
     );
   await stageKeyring(source, root);
-  const sourceHash = createHash("sha256");
-  for (const file of ["main.cpp", "CMakeLists.txt"])
-    sourceHash.update(
-      await readFile(join(source, "scripts/windows-runtime-host", file)),
-    );
-  const expectedSource = sourceHash.digest("hex");
+  const expectedSources = windowsHelperSourceDigests(
+    await Promise.all(
+      ["main.cpp", "CMakeLists.txt"].map((file) =>
+        readFile(join(source, "scripts/windows-runtime-host", file)),
+      ),
+    ),
+  );
   for (const arch of ["x64", "arm64"]) {
     const input = join(windowsHosts, `windows-host-${arch}`);
     const bytes = await readFile(join(input, "zcode-runtime-host.exe"));
@@ -107,7 +121,10 @@ export async function stageSecureRuntimeAssets({ source, root, windowsHosts }) {
     const manifest = JSON.parse(
       await readFile(join(input, "build.json"), "utf8"),
     );
-    if (manifest.source !== expectedSource || manifest.binary !== digest(bytes))
+    if (
+      !expectedSources.has(manifest.source) ||
+      manifest.binary !== digest(bytes)
+    )
       throw new Error(`Windows ${arch} helper source or binary hash differs`);
     const output = join(root, "tools/runtime-host", `win32-${arch}`);
     await mkdir(output, { recursive: true });
