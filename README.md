@@ -12,12 +12,35 @@ This is an unofficial plugin. It is not endorsed or maintained by ZCode or Z.ai.
 
 ## Requirements
 
-| Setting        | Requirement                                                                                                                             |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Paseo          | 0.15.0 or later; development SDK 0.15.4                                                                                                 |
-| Plugin Node.js | 22.12.0 or later (the Paseo daemon's runtime)                                                                                           |
-| Managed setup  | Windows x64 (win-x64); other platforms require an external compatible runtime                                                           |
-| ZCode          | Managed: 3.18.0 (release `3.18.0-paseo.4`) with Node.js 24.21.0. Overrides: stable Server 3.18.0+ / Agent 0.17.1+ with Node.js 24.14.0+ |
+| Component                    | Minimum / requirement                                          | Verified or supplied version                                            |
+| ---------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| This fork                    | Based on upstream provider 0.5.2                               | 0.5.2-fork.1                                                            |
+| Paseo app and daemon         | >=0.15.0                                                       | 0.15.4                                                                  |
+| Node.js running the plugin   | >=22.12.0, supplied by the daemon environment                  | Not independently pinned; inherits Paseo's execution environment        |
+| ZCode Server                 | Stable >=3.18.0                                                | 3.18.0                                                                  |
+| ZCode Agent / integrated CLI | Stable >=0.17.1                                                | 0.17.1                                                                  |
+| Node.js running ZCode        | Ordinary Node.js >=24.14.0; Electron is not accepted           | Managed Node.js 24.21.0                                                 |
+| ZCode Desktop                | Optional                                                       | Shared sign-in verified with Desktop 3.18.0                             |
+| Managed installation         | Windows x64 only                                               | ZCode runtime 3.18.0-paseo.4                                            |
+| Native components            | Included in the Windows runtime; no separate user installation | Credential keyring 2.1.2; process helper built from ZCode 3.18.0 source |
+| Git installation tools       | Git and npm available on the daemon machine                    | No separate minimum version declared; package dependencies are locked   |
+
+The Node.js running the plugin and the Node.js running ZCode have different
+requirements. Existing compatible execution environments can be reused.
+Passing the minimum check does not certify future ZCode releases: only the
+versions listed above have been verified for this fork.
+
+### 版本兼容与已有运行时（中文）
+
+- 本次实测组合为 **Paseo 0.15.4、ZCode Server 3.18.0、Agent 0.17.1、Node.js 24.21.0**。
+  最低要求与实测版本不同，详见上表。
+- **已有兼容运行时且插件能找到它时，无需重复下载或安装。** 已安装的托管运行时会被复用；
+  自备运行时需要配置下方的两个路径变量，插件不会自动扫描任意目录。
+- 安装了 ZCode Desktop，不一定代表独立 Server/Agent 文件齐全且已配置给插件使用。
+  所需目录结构见 [Using your own runtime](#using-your-own-runtime)。
+- 仅在缺少兼容运行时或版本不满足要求时补充安装或升级。ZCode 3.17.x 及更早的运行时
+  不满足本 Fork 的要求；更高版本仍需验证，不能只凭版本号保证兼容。
+- Start Plan 模型取决于账号实时权益；显示 pending 时不代表需要重新安装运行时。
 
 ## Installation
 
@@ -36,7 +59,9 @@ If another `zcode-provider` installation is already configured, remove that plug
 
 Open **Settings → Plugins → zcode-provider → Settings**. The screen has three tabs: **Runtime** installs and removes the runtime, **Account** signs in and manages model providers, and **Timeline** chooses what ZCode agents add to the timeline.
 
-On the **Runtime** tab, choose **Download and install**. The screen lists every download, its SHA-256, size and license before you start. Setup runs on the machine hosting the daemon:
+First check the existing runtime with `paseo provider diagnostic zcode --json`. If a compatible runtime is already configured and the diagnostic is Ready, reuse it. For an existing external runtime, configure the paths in [Using your own runtime](#using-your-own-runtime).
+
+Only when a compatible runtime is missing or needs upgrading, choose **Download and install** on the **Runtime** tab. The screen lists every download, its SHA-256, size and license before you start. Setup runs on the machine hosting the daemon:
 
 - Node.js 24.21.0 from nodejs.org.
 - The ZCode runtime 3.18.0 from this fork's [releases](https://github.com/zlfuu531/paseo-plugin-zcode-provider/releases/tag/zcode-runtime-v3.18.0-paseo.4) (`3.18.0-paseo.4`). ZCode does not publish its integrated CLI, so this is an **unofficial build** of the public source with the patches in [patches/zcode](patches/zcode) applied (ADR 19). The patches hide Computer Use, Browser Use and Visualize, which cannot run or render here. This Windows x64 archive includes native credential keyring packages and a source-built Windows process helper. It is not endorsed or maintained by ZCode or Z.ai.
